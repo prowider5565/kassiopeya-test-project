@@ -112,14 +112,16 @@ PRODUCTS = [
     },
 ]
 
+category_by_id = {category["id"]: category for category in CATEGORIES}
 
-def get_valid_products(products, active_category_ids):
+
+def get_valid_products(products):
     valid_products = []
     for product in products:
         # Here we are gonna check if the product or category bound to it is active or not
         if (
             not product["is_active"]
-            or product["category_id"] not in active_category_ids
+            or not category_by_id[product["category_id"]]["is_active"]
         ):
             continue
         product_name = product["name"]
@@ -159,13 +161,10 @@ def build_yml(products, categories, generated_at):
     # out the active categories. Also, we are gonna sort the categories using
     # sorted() function similar to what we did for products in
     # get_valid_products function above. See the comment inside the function.
-    active_categories = sorted(
-        filter(lambda category: category["is_active"], categories),
-        key=lambda category: category["id"],
-    )
-    active_category_ids = list(map(lambda item: item["id"], active_categories))
-    valid_products = get_valid_products(products, active_category_ids)
 
+    # category_ids = list(map(lambda item: item["id"], categories))
+    valid_products = get_valid_products(products)
+    valid_category_ids = map(lambda product: product["category_id"], valid_products)
     xml = '<?xml version="1.0" encoding="UTF-8"?>'
     # I'm using .strftime() here to format the date time in the expected format, seconds excluded.
     xml += f'<yml_catalog date="{generated_at.strftime('%Y-%m-%d %H:%M')}">'
@@ -187,8 +186,11 @@ def build_yml(products, categories, generated_at):
     #         for category in categories
     #         if category["id"] == product["category_id"]
     #     )
-    for category in active_categories:
-        xml += f'<category id="{category["id"]}">{escape(category["name"])}</category>'
+    for category_id in sorted(set(valid_category_ids)):
+        xml += '<category id="{category_id}">{category_name}</category>'.format(
+            category_id=category_id,
+            category_name=escape(category_by_id[category_id]["name"]),
+        )
 
     xml += "</categories>"
     xml += "<offers>"

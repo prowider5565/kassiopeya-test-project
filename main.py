@@ -209,7 +209,7 @@ def build_yml(products, categories, generated_at):
         )
         # Removing .replace() part to ensure period is used instead of comma
         # Using round function to only include 2 digits after period.
-        price = round(Decimal(product["price"]))  # .replace(".", ",")
+        price = round(Decimal(product["price"]), ndigits=2)  # .replace(".", ",")
 
         xml += f"<price>{price}</price>"
 
